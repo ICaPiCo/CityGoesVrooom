@@ -3,11 +3,12 @@ import pyxel,random,math
 class City:
     def __init__(self):
         self.buildings = []
-        #pyxel.init(950,600, title="City Generator and NPCs", display_scale=2)
-        #pyxel.run(self.update,self.draw)
+        pyxel.init(950,600, title="City Generator and NPCs", display_scale=2)
+        pyxel.run(self.update,self.draw)
         self.building_count = 0
     def gen_world(self):
         '''build buildings, place buildings'''
+        self.place_building(self.create_building((1,1)))
         pass
 
     def update(self):
@@ -15,23 +16,38 @@ class City:
 
     def draw(self):
         pass
+    def create_building(self, pos):
 
-    def create_building(self,pos):
-        '''takes a position and returns a list of coords for a building placement with 90° angles'''
+        """Takes a position and returns a list of coordinates for a rotated square building."""
         self.building_count += 1
-        x,y = pos
+        x, y = pos
         pos_list = []
-        pos_list.append((x,y))
-        largeness = random.randint(5,10)
-        angle = random.randint(0,360)
-        print(angle,largeness)
-        for i in range(3):
-            x2 = x+largeness*math.sin(angle+i*90)
-            y2 = y+largeness*math.cos(angle+i*90)
-            pos_list.append((x2,y2))
-        print(f"Position of Building #{self.building_count} corners: {pos_list}")
+
+        # Size and angle
+        size = random.randint(5, 10)
+        angle_deg = random.randint(0, 360)
+        angle = math.radians(angle_deg)
+
+        # Half size to center the building
+        half = size / 2
+
+        # Define square corners relative to the center (x, y)
+        corners = [
+            (-half, -half),
+            (half, -half),
+            (half, half),
+            (-half, half)
+        ]
+        # Rotation formula:
+        # x' = x*cos(θ) - y*sin(θ)
+        # y' = x*sin(θ) + y*cos(θ) --> matrices! urgh
+        for cx, cy in corners:
+            rx = cx * math.cos(angle) - cy * math.sin(angle)
+            ry = cx * math.sin(angle) + cy * math.cos(angle)
+            pos_list.append((x + rx, y + ry))
+
+        #print(f"Angle: {angle_deg}°, size: {size},pos_list: {pos_list}")
         return pos_list
-        pass
 
     def create_paths(self):
         """URGH IT'S BROKEN AND IDK why creates path between buildings"""
@@ -56,4 +72,3 @@ class City:
 '''what we want:
 buildings (obstacles), roads (pats)--> coords? --> Blocky or continuous?'''
 city = City()
-city.create_building((1,1))
