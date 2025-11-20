@@ -1,5 +1,13 @@
 import pyxel,random,math
 
+"""
+pyxel.pset(x,y,col) -> set the color of one pixel at pos x,y and color col
+pyxel.rect(x,y,x2,y2,col) -> draw a rectangle from pos x,y to pos x2,y2 with color col
+pyxel.pget(x,y) -> get color of pixel at pos x,y
+pyxel.cls(0) -> clear screen with color 0 (black)
+"""
+
+
 class City:
     def __init__(self):
         self.buildings = []

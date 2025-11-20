@@ -1,80 +1,106 @@
-"""Actual pathfinding prototype to implement for later"""
 import pyxel, random, math
+import heapq
+
 
 class Findpath:
-    def __init__(self, oX, oY, fX, fY, size):
-        self.oX = oX
-        self.oY = oY
-        self.fX = fX
-        self.fY = fY
+    def __init__(self, size):
         self.size = size
-        # Initialize grid with large values (not lists!)
+        self.walls = []
+        self.oX = 0
+        self.oY = 0
+        self.fX = 0
+        self.fY = 0
+        self.scanned = False
         self.grid = [[999999 for _ in range(self.size)] for _ in range(self.size)]
         self.found_path = False
-        self.queue = [(oX, oY, 0)]  # Use a queue for BFS instead of recursion
-        pyxel.init(self.size, self.size, title="Path finding bot", display_scale=1)
+
+        pyxel.init(self.size, self.size, title="Path finding bot")
+        pyxel.load("my_resource.pyxres")
+        # Initialize queue after scanning walls
+        self.queue = []
+
         pyxel.run(self.update, self.draw)
+
+    def scan_walls(self, colors):
+        if not self.scanned:
+            for i in range(self.size):
+                for j in range(self.size):
+                    if pyxel.pget(i, j) in colors:
+                        self.walls.append((i, j))  # Use tuples for consistency
+
+            # Convert to set for O(1) lookup
+            self.walls = set(self.walls)
+
+            # Generate valid start and end positions
+            while True:
+                self.oX = random.randint(0, self.size - 1)
+                self.oY = random.randint(0, self.size - 1)
+                self.fX = random.randint(0, self.size - 1)
+                self.fY = random.randint(0, self.size - 1)
+
+                if ((self.oX, self.oY) not in self.walls and
+                        (self.fX, self.fY) not in self.walls and
+                        not (self.oX == self.fX and self.oY == self.fY)):
+                    break
+
+            # Initialize queue with starting position
+            heapq.heappush(self.queue, (0, self.oX, self.oY, 0))
+            self.scanned = True
 
     def spread_step(self):
         """Process one step of pathfinding per frame"""
         if not self.queue or self.found_path:
             return
 
-        # Process a batch of points per frame
-        for _ in range(100):  # Process 100 points per frame for speed
+        for _ in range(100):
             if not self.queue:
                 break
 
-            x, y, dist = self.queue.pop(0)
+            priority, x, y, dist = heapq.heappop(self.queue)
 
-            # Skip if out of bounds
             if not (0 <= x < self.size and 0 <= y < self.size):
                 continue
 
-            # Skip if we've already found a better path to this cell
+            # Skip if this is a wall
+            if (x, y) in self.walls:
+                continue
+
             if self.grid[x][y] <= dist:
                 continue
 
-            # Update this cell
             self.grid[x][y] = dist
 
-            # Check if we reached the target
             if x == self.fX and y == self.fY:
                 self.found_path = True
                 return
 
-            # Add neighbors to queue
-            angle = math.atan2((self.fX - x),(self.fY - y)) * 180* math.pig
-            temp = []
-            while len(temp)<4:
-                r = random.choice([(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1), (-1, 1), (1, -1)])
-                if r not in temp: temp.append(r)
-            for dx, dy in temp:
+            # Add neighbors
+            for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1), (-1, 1), (1, -1)]:
                 nx, ny = x + dx, y + dy
                 if 0 <= nx < self.size and 0 <= ny < self.size:
-                    if self.grid[nx][ny] > dist + 1:
-                        self.queue.append((nx, ny, dist + 1))
+                    if (nx, ny) not in self.walls and self.grid[nx][ny] > dist + 1:
+                        priority = (nx - self.fX) ** 2 + (ny - self.fY) ** 2
+                        heapq.heappush(self.queue, (priority, nx, ny, dist + 1))
 
     def update(self):
+        if not self.scanned:
+            self.scan_walls([7])
         self.spread_step()
 
     def draw(self):
         pyxel.cls(0)
-        for x in range(0, self.size, 1):  # Sample every 2 pixels for performance
-            for y in range(0, self.size, 1):
+        pyxel.blt(0, 0, 0, 0, 0, 16, 16, 0)
+
+        # Draw explored cells
+        for x in range(self.size):
+            for y in range(self.size):
                 val = self.grid[x][y]
                 if val < 999999:
-                    # Map distance to color (0-15 for pyxel colors)
-                    color = min(15, val % 16)
-                    pyxel.pset(y, x, color)
-
-
-
-
+                    pyxel.pset(x, y, 5)  # Fixed: use (x, y) not (y, x)
 
         # Draw start and end points
-        pyxel.circ(self.oY, self.oX, 1, 8)  # Start in red
-        pyxel.circ(self.fY, self.fX, 1, 11)  # End in green
+        pyxel.pset(self.oX, self.oY, 8)
+        pyxel.pset(self.fX, self.fY, 11)
 
-size = 500
-Findpath(random.randint(0,size), random.randint(0,size), random.randint(0,size), random.randint(0,size),size)
+
+Findpath(16)
