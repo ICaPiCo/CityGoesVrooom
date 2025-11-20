@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import random, pyxel, math
 from idlelib.window import add_windows_to_menu
 
@@ -36,3 +37,6 @@ class Maze:
 maze = Maze((10,10))
 print(maze.neighbors((1,1)))
 print(maze)
+=======
+
+>>>>>>> Stashed changes
