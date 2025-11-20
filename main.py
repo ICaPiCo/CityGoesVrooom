@@ -1,74 +1,38 @@
-import pyxel,random,math
+import random, pyxel, math
+from idlelib.window import add_windows_to_menu
 
-class City:
-    def __init__(self):
-        self.buildings = []
-        pyxel.init(950,600, title="City Generator and NPCs", display_scale=2)
-        pyxel.run(self.update,self.draw)
-        self.building_count = 0
-    def gen_world(self):
-        '''build buildings, place buildings'''
-        self.place_building(self.create_building((1,1)))
-        pass
 
-    def update(self):
-        pass
+class Maze:
+    def __init__(self,size):
+        x,y = size
+        self.x,self.y = x,y
+        self.grid = {(i,j):0 for i in range(x) for j in range(y)}
 
-    def draw(self):
-        pass
-    def create_building(self, pos):
+        #print(self.grid)
+    def neighbors(self, pos):
+        x0, y0 = pos
+        candidates = [(x0 - 1, y0), (x0 + 1, y0), (x0, y0 - 1), (x0, y0 + 1)]
+        return [p for p in candidates if p in self.grid]
+    def pp_walls(self):
+        '''prepp and place walls for the map'''
 
-        """Takes a position and returns a list of coordinates for a rotated square building."""
-        self.building_count += 1
-        x, y = pos
-        pos_list = []
+        dist = int(math.sqrt(self.x**2 + self.y**2)/2)
+        for i in range(dist):
+            wall_pos = (i+random.randint(-1,1),random.randint(0,self.y)) if i not in (0,self.x) else (i)
+            wall_size = (random.randint(1, int((self.x - 1) / 2))), random.randint(1, int((self.y - 1) / 2))
+            for y in range(wall_pos[1],wall_size[1]):
+                for x in range(wall_pos[0],wall_pos[1]):
+                    self.grid[(x,y)] = 1
 
-        # Size and angle
-        size = random.randint(5, 10)
-        angle_deg = random.randint(0, 360)
-        angle = math.radians(angle_deg)
+        # instead make the bot trace paths from the get go and trace walls around
+    def __str__(self):
+        for i in range
+        print(self.grid)
 
-        # Half size to center the building
-        half = size / 2
+    def screen(self):
+        pyxel.init(200,200,title="Maze")
 
-        # Define square corners relative to the center (x, y)
-        corners = [
-            (-half, -half),
-            (half, -half),
-            (half, half),
-            (-half, half)
-        ]
-        # Rotation formula:
-        # x' = x*cos(θ) - y*sin(θ)
-        # y' = x*sin(θ) + y*cos(θ) --> matrices! urgh
-        for cx, cy in corners:
-            rx = cx * math.cos(angle) - cy * math.sin(angle)
-            ry = cx * math.sin(angle) + cy * math.cos(angle)
-            pos_list.append((x + rx, y + ry))
 
-        #print(f"Angle: {angle_deg}°, size: {size},pos_list: {pos_list}")
-        return pos_list
-
-    def create_paths(self):
-        """URGH IT'S BROKEN AND IDK why creates path between buildings"""
-        """
-        middle_pos = [(i[0]+i[1]),((i[2]+i[3]) for i in self.buildings]
-        existing_roads = []
-        for i in self.middle_pos:
-            for j in self.middle_pos:
-                if i != j:
-                    new_road = (i, j)
-                    if new_road not in existing_roads:
-                        existing_roads.append(new_road)
-        """
-
-    def place_building(self,pos):
-        '''takes a pos_list and draws the lines between the points'''
-        pyxel.line(pos[0], pos[1], pos[2], pos[3],7)
-        pyxel.line(pos[1], pos[2], pos[3], pos[0], 7)
-        pyxel.line(pos[2], pos[3], pos[0], pos[1], 7)
-        pyxel.line(pos[3], pos[0], pos[1], pos[2], 7)
-
-'''what we want:
-buildings (obstacles), roads (pats)--> coords? --> Blocky or continuous?'''
-city = City()
+maze = Maze((10,10))
+print(maze.neighbors((1,1)))
+print(maze)
